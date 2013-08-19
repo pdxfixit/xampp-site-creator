@@ -242,6 +242,9 @@ ECHO.
 ECHO Deleting hosts entry for %SITE%...
 chdir /d %WINDIR%\system32\drivers\etc
 copy hosts hosts.bak > NUL
+powershell -Command "Get-Content hosts | ForEach-Object { $_ -replace '^127\.0\.0\.1 www.%SITE%\.local$', '' } | Set-Content hosts.new"
+del hosts
+ren hosts.new hosts
 powershell -Command "Get-Content hosts | ForEach-Object { $_ -replace '^127\.0\.0\.1 %SITE%\.local$', '' } | Set-Content hosts.new"
 del hosts
 ren hosts.new hosts
@@ -265,7 +268,7 @@ ECHO.
 ECHO Deleting files...
 chdir /d %WWW%
 rmdir /s /q %SITE% > NUL
-GOTO RESTART
+GOTO RESTARTAPACHE
 
 :HOSTS
 ECHO.
@@ -285,14 +288,39 @@ copy httpd-vhosts.conf httpd-vhosts.bak > NUL
 (ECHO ^<VirtualHost *:80^>&& ECHO(    ServerAdmin postmaster@%SITE%&& ECHO(    DocumentRoot "%DOCROOT%/%SITE%"&& ECHO(    ServerName %SITE%&& ECHO(    ServerAlias %SITE%.local www.%SITE%.local&& ECHO(    ErrorLog "logs/%SITE%-error.log"&& ECHO(    CustomLog "logs/%SITE%-access.log" combined&& ECHO ^</VirtualHost^>&& ECHO.) > temp
 copy /b httpd-vhosts.conf+temp httpd-vhosts.conf > NUL
 del temp
-GOTO RESTART
+GOTO RESTARTAPACHE
 
-:RESTART
+:RESTARTAPACHE
+REM This (following GOTO) should get updated with each Apache version.
+GOTO CHECKAPACHE24
+
+:CHECKAPACHE24
+sc query apache2.4 > NUL
+IF ERRORLEVEL 1060 GOTO CHECKAPACHE22
+GOTO RESTARTAPACHE24
+
+:CHECKAPACHE22
+sc query apache2.2 > NUL
+IF ERRORLEVEL 1060 GOTO APACHEERROR
+GOTO RESTARTAPACHE22
+
+:RESTARTAPACHE24
 ECHO.
-ECHO Restarting Apache...
+ECHO Restarting Apache 2.4...
+net stop Apache2.4
+net start Apache2.4
+GOTO START
+
+:RESTARTAPACHE22
+ECHO.
+ECHO Restarting Apache 2.2...
 net stop Apache2.2
 net start Apache2.2
 GOTO START
+
+:APACHEERROR
+ECHO The Apache service seems to be missing.
+GOTO ERROR
 
 :START
 IF %CHOICE% == GENERIC (
@@ -322,3 +350,4 @@ pause
 
 :EXIT
 chdir /d %DIR%
+pause
