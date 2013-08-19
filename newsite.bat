@@ -1,5 +1,5 @@
 @Echo Off
-REM XAMPP Site Creation Script v2.3
+REM XAMPP Site Creation Script v2.3.1
 REM Copyleft (c) 2012-2013, PDXfixIT, LLC
 REM
 REM -= Begin Variables =-
@@ -51,7 +51,7 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                       XAMPP Site Creation Script v2.3                       ^|
+ECHO ^|                      XAMPP Site Creation Script v2.3.1                      ^|
 ECHO ^|                        Last Updated: August 18, 2012                        ^|
 ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
@@ -149,10 +149,10 @@ ECHO.
 ECHO Copying Joomla files...
 chdir /d %WWW%\%SITE%
 IF %JVER% == 2 (
-	SET INSTALLERFOLDER = %J2INSTALLERFOLDER%
+	SET INSTALLERFOLDER=%J2INSTALLERFOLDER%
 )
 IF %JVER% == 3 (
-	SET INSTALLERFOLDER = %J3INSTALLERFOLDER%
+	SET INSTALLERFOLDER=%J3INSTALLERFOLDER%
 )
 xcopy %INSTALLERFOLDER% . /q /s /v > NUL
 GOTO DBPREP
@@ -189,10 +189,12 @@ CLS
 GOTO DBPREP
 
 :DBPREP
+CLS
 ECHO.
 ECHO What is your preferred database prefix?
 ECHO (no underscores please; we'll add them)
-SET /p PREFIX=? 
+ECHO (or, press ENTER to accept the default)
+SET /p PREFIX=prefix: 
 IF "%PREFIX%" == "" SET PREFIX=%DEFAULTPREFIX%
 chdir /d %WWW%\%SITE%
 powershell -Command "Get-Content installation\sql\mysql\joomla.sql | ForEach-Object { $_ -replace '#__', '%PREFIX%_' } | Set-Content jinstaller.sql"
@@ -200,6 +202,7 @@ GOTO CONFIGURATION
 
 :CONFIGURATION
 chdir /d %WWW%\%SITE%
+CLS
 ECHO.
 SET /p SITENAME=What is the descriptive name of this site? 
 ECHO.
@@ -210,6 +213,7 @@ GOTO SAMPLECONTENT
 
 :SAMPLECONTENT
 chdir /d %WWW%\%SITE%
+CLS
 ECHO.
 SET /p SAMPLECONTENT=Do you want sample content installed? (Y/N) 
 IF /i %SAMPLECONTENT% == Y (
@@ -222,7 +226,9 @@ IF /i %SAMPLECONTENT% == Y (
 GOTO MYSQL
 
 :MYSQL
+CLS
 ECHO.
+ECHO Please provide configuration details.
 ECHO (press ENTER to accept defaults)
 SET /p NAME=Your name: 
 SET /p USER=Your username:
@@ -233,6 +239,7 @@ IF "%USER%" == "" SET USER=%DEFAULTUSER%
 GOTO CREATEDB
 
 :CREATEDB
+CLS
 ECHO.
 ECHO Creating the database...
 chdir /d %XAMPP%\mysql\bin
@@ -244,12 +251,7 @@ GOTO IMPORTSQL
 :IMPORTSQL
 chdir /d %XAMPP%\mysql\bin
 mysql --host=localhost --user=root --database=%SITE% --execute="SOURCE %DOCROOT%/%SITE%/jinstaller.sql"
-REM IF %JVER% == 2 (
-REM mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_users (id, name, username, email, password, usertype, block, sendEmail, registerDate, lastvisitDate, activation, params) VALUES (5, '%NAME%', '%USER%', '%EMAIL%', 'c6bc538c76f52d7e7fc9e37827f9975c:19ujHiJIBekABNGepBIsWGT7VLpJcEgj', 'deprecated', 0, 1, NOW(), NOW(), '', '')"
-REM )
-REM IF %JVER% == 3 (
 mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_users (id, name, username, email, password, block, sendEmail, registerDate, lastvisitDate, activation, params) VALUES (5, '%NAME%', '%USER%', '%EMAIL%', 'c6bc538c76f52d7e7fc9e37827f9975c:19ujHiJIBekABNGepBIsWGT7VLpJcEgj', 0, 1, NOW(), NOW(), '', '')"
-REM )
 mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_user_usergroup_map (user_id, group_id) VALUES (5, 8)"
 REM mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_schemas (`extension_id`, `version_id`) VALUES (700, '2.5.4-2012-03-19');"
 GOTO CLEANUP
