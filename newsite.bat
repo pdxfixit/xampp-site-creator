@@ -1,5 +1,5 @@
 @Echo Off
-REM XAMPP Site Creation Script v2.1.1
+REM XAMPP Site Creation Script v2.2
 REM Copyleft (c) 2012-2013, PDXfixIT, LLC
 REM
 REM -= Begin Variables =-
@@ -29,7 +29,7 @@ SET XAMPP=B:\xampp
 REM
 REM -= End Variables =-
 
-:CHECK
+:INITIALIZATION
 REM Check Windows version
 ver | findstr /i "5\.0\." > NUL
 IF %ERRORLEVEL% == 0 (
@@ -40,7 +40,7 @@ IF %ERRORLEVEL% == 0 (
 REM Check for Administrator elevation
 AT > NUL
 IF NOT %ERRORLEVEL% == 0 (
-  ECHO Administrator privileges are required to restart Apache.
+  ECHO Administrator privileges are required.
   GOTO ERROR
 )
 
@@ -48,9 +48,9 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                       XAMPP Site Creation Script v2.1                       ^|
-ECHO ^|                       Last Updated: September 12, 2012                      ^|
-ECHO ^|                            support@pdxfixit.com                             ^|
+ECHO ^|                       XAMPP Site Creation Script v2.2                       ^|
+ECHO ^|                        Last Updated: August 18, 2012                        ^|
+ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
 ECHO ^|                                                                             ^|
 ECHO ^|                   Please type a selection and press ENTER.                  ^|
@@ -71,7 +71,7 @@ ECHO \==========================================================================
 ECHO.
 SET /p CHOICE=Your selection? 
 REM Escape Hatch
-IF /i %CHOICE% == EXIT GOTO EXIT
+IF /i "%CHOICE%" == "EXIT" GOTO EXIT
 
 :PROCESSOR
 CLS
@@ -95,12 +95,14 @@ IF %CHOICE% == 4 (
 	SET CHOICE=ROCKETLAUNCHER
 	GOTO SITENAME
 )
+GOTO ERROR
 
 :SITENAME
 SET /p SITE=What is the short name of the site? 
 IF %CHOICE% == DELETE (
 	GOTO DELETE
 ) ELSE (
+REM todo: Future feature -- check to see if the site already exists.
 	GOTO FILES
 )
 
@@ -113,7 +115,7 @@ IF NOT EXIST %SITE% (
 	ECHO Error creating directory.
 	GOTO ERROR
 )
-REM Future feature -- check for Joomla! installation folder before proceeding
+REM todo: Future feature -- check for Joomla! installation folder before proceeding
 IF %CHOICE% == GENERIC GOTO DBCHOICE
 IF %CHOICE% == JOOMLA GOTO JOOMLA
 IF %CHOICE% == KICKSTART GOTO KICKSTART
@@ -242,13 +244,13 @@ ECHO.
 ECHO Deleting hosts entry for %SITE%...
 chdir /d %WINDIR%\system32\drivers\etc
 copy hosts hosts.bak > NUL
-powershell -Command "Get-Content hosts | ForEach-Object { $_ -replace '^127\.0\.0\.1 www.%SITE%\.local$', '' } | Set-Content hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 www.%SITE%.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
-powershell -Command "Get-Content hosts | ForEach-Object { $_ -replace '^127\.0\.0\.1 %SITE%\.local$', '' } | Set-Content hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 %SITE%.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
-powershell -Command "Get-Content hosts | ForEach-Object { $_ -replace '^127\.0\.0\.1 %SITE%$', '' } | Set-Content hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 %SITE%$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
 ECHO.
@@ -291,7 +293,7 @@ del temp
 GOTO RESTARTAPACHE
 
 :RESTARTAPACHE
-REM This (following GOTO) should get updated with each Apache version.
+REM This (the following GOTO) should get updated with each Apache version.
 GOTO CHECKAPACHE24
 
 :CHECKAPACHE24
@@ -319,6 +321,7 @@ net start Apache2.2
 GOTO START
 
 :APACHEERROR
+ECHO.
 ECHO The Apache service seems to be missing.
 GOTO ERROR
 
@@ -350,4 +353,3 @@ pause
 
 :EXIT
 chdir /d %DIR%
-pause
