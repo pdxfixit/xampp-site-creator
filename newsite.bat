@@ -1,5 +1,5 @@
 @Echo Off
-REM XAMPP Site Creation Script v2.2
+REM XAMPP Site Creation Script v2.3
 REM Copyleft (c) 2012-2013, PDXfixIT, LLC
 REM
 REM -= Begin Variables =-
@@ -9,17 +9,20 @@ SET DEFAULTEMAIL=ben@pdxfixit.com
 SET DEFAULTNAME=Ben Sandberg
 SET DEFAULTUSER=ben
 REM
+REM Database prefix string.  No underscores here, please.
+SET DEFAULTPREFIX=jos
+REM
 REM Current Directory
 SET DIR=%CD%
 REM
 REM Same as the htdocs, but with a forward slash, to match Unix-style.
 SET DOCROOT=B:/www
 REM 
-REM Extracted contents of a Joomla release -- installation folder and all.
-SET INSTALLERFOLDER=B:\www\J!installer
-REM
-REM Database prefix string.  No underscores here, please.
-SET PREFIX=jos
+REM Extracted contents of a Joomla 2.5.x release -- installation folder and all.
+SET J2INSTALLERFOLDER=B:\www\J2installer
+REM 
+REM Extracted contents of a Joomla 3.x release -- installation folder and all.
+SET J3INSTALLERFOLDER=B:\www\J3installer
 REM
 REM Web root (htdocs) folder.
 SET WWW=B:\www
@@ -48,7 +51,7 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                       XAMPP Site Creation Script v2.2                       ^|
+ECHO ^|                       XAMPP Site Creation Script v2.3                       ^|
 ECHO ^|                        Last Updated: August 18, 2012                        ^|
 ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
@@ -57,11 +60,13 @@ ECHO ^|                   Please type a selection and press ENTER.              
 ECHO ^|                                                                             ^|
 ECHO ^|    1     Generic Website                                                    ^|
 ECHO ^|                                                                             ^|
-ECHO ^|    2     Joomla! Installation                                               ^|
+ECHO ^|    2     Joomla! 2.5.x Installation                                         ^|
 ECHO ^|                                                                             ^|
-ECHO ^|    3     Kickstart Joomla! Installation                                     ^|
+ECHO ^|    3     Joomla! 3.x Installation                                           ^|
 ECHO ^|                                                                             ^|
-ECHO ^|    4     RocketLauncher Joomla! Installation                                ^|
+ECHO ^|    4     Kickstart Joomla! Installation                                     ^|
+ECHO ^|                                                                             ^|
+ECHO ^|    5     RocketLauncher Joomla! Installation                                ^|
 ECHO ^|                                                                             ^|
 ECHO ^|    0     Delete an Installation                                             ^|
 ECHO ^|                                                                             ^|
@@ -85,13 +90,19 @@ IF %CHOICE% == 1 (
 )
 IF %CHOICE% == 2 (
 	SET CHOICE=JOOMLA
+	SET JVER=2
 	GOTO SITENAME
 )
 IF %CHOICE% == 3 (
-	SET CHOICE=KICKSTART
+	SET CHOICE=JOOMLA
+	SET JVER=3
 	GOTO SITENAME
 )
 IF %CHOICE% == 4 (
+	SET CHOICE=KICKSTART
+	GOTO SITENAME
+)
+IF %CHOICE% == 5 (
 	SET CHOICE=ROCKETLAUNCHER
 	GOTO SITENAME
 )
@@ -137,6 +148,12 @@ GOTO HOSTS
 ECHO.
 ECHO Copying Joomla files...
 chdir /d %WWW%\%SITE%
+IF %JVER% == 2 (
+	SET INSTALLERFOLDER = %J2INSTALLERFOLDER%
+)
+IF %JVER% == 3 (
+	SET INSTALLERFOLDER = %J3INSTALLERFOLDER%
+)
 xcopy %INSTALLERFOLDER% . /q /s /v > NUL
 GOTO DBPREP
 
@@ -172,6 +189,11 @@ CLS
 GOTO DBPREP
 
 :DBPREP
+ECHO.
+ECHO What is your preferred database prefix?
+ECHO (no underscores please; we'll add them)
+SET /p PREFIX=? 
+IF "%PREFIX%" == "" SET PREFIX=%DEFAULTPREFIX%
 chdir /d %WWW%\%SITE%
 powershell -Command "Get-Content installation\sql\mysql\joomla.sql | ForEach-Object { $_ -replace '#__', '%PREFIX%_' } | Set-Content jinstaller.sql"
 GOTO CONFIGURATION
@@ -200,6 +222,8 @@ IF /i %SAMPLECONTENT% == Y (
 GOTO MYSQL
 
 :MYSQL
+ECHO.
+ECHO (press ENTER to accept defaults)
 SET /p NAME=Your name: 
 SET /p USER=Your username:
 SET /p EMAIL=Your email address: 
@@ -220,8 +244,13 @@ GOTO IMPORTSQL
 :IMPORTSQL
 chdir /d %XAMPP%\mysql\bin
 mysql --host=localhost --user=root --database=%SITE% --execute="SOURCE %DOCROOT%/%SITE%/jinstaller.sql"
-mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_users (id, name, username, email, password, usertype, block, sendEmail, registerDate, lastvisitDate, activation, params) VALUES (24, '%NAME%', '%USER%', '%EMAIL%', 'c6bc538c76f52d7e7fc9e37827f9975c:19ujHiJIBekABNGepBIsWGT7VLpJcEgj', 'deprecated', 0, 1, NOW(), NOW(), '', '')"
-mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_user_usergroup_map (user_id, group_id) VALUES (24, 8)"
+REM IF %JVER% == 2 (
+REM mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_users (id, name, username, email, password, usertype, block, sendEmail, registerDate, lastvisitDate, activation, params) VALUES (5, '%NAME%', '%USER%', '%EMAIL%', 'c6bc538c76f52d7e7fc9e37827f9975c:19ujHiJIBekABNGepBIsWGT7VLpJcEgj', 'deprecated', 0, 1, NOW(), NOW(), '', '')"
+REM )
+REM IF %JVER% == 3 (
+mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_users (id, name, username, email, password, block, sendEmail, registerDate, lastvisitDate, activation, params) VALUES (5, '%NAME%', '%USER%', '%EMAIL%', 'c6bc538c76f52d7e7fc9e37827f9975c:19ujHiJIBekABNGepBIsWGT7VLpJcEgj', 0, 1, NOW(), NOW(), '', '')"
+REM )
+mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_user_usergroup_map (user_id, group_id) VALUES (5, 8)"
 REM mysql --host=localhost --user=root --database=%SITE% --execute="INSERT INTO %PREFIX%_schemas (`extension_id`, `version_id`) VALUES (700, '2.5.4-2012-03-19');"
 GOTO CLEANUP
 
