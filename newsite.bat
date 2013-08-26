@@ -41,7 +41,7 @@ IF %ERRORLEVEL% == 0 (
 )
 
 REM Check for Administrator elevation
-AT > NUL
+NET SESSION >nul 2>&1
 IF NOT %ERRORLEVEL% == 0 (
   ECHO Administrator privileges are required.
   GOTO ERROR
