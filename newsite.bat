@@ -1,5 +1,5 @@
 @Echo Off
-REM XAMPP Site Creation Script v2.3.1
+REM XAMPP Site Creation Script v2.4
 REM Copyleft (c) 2012-2013, PDXfixIT, LLC
 REM
 REM -= Begin Variables =-
@@ -51,8 +51,8 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                      XAMPP Site Creation Script v2.3.1                      ^|
-ECHO ^|                        Last Updated: August 18, 2012                        ^|
+ECHO ^|                       XAMPP Site Creation Script v2.4                       ^|
+ECHO ^|                        Last Updated: August 26, 2012                        ^|
 ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
 ECHO ^|                                                                             ^|
