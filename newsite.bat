@@ -1,5 +1,5 @@
 @Echo Off
-REM XAMPP Site Creation Script v2.4
+REM XAMPP Site Creation Script v2.4.1
 REM Copyleft (c) 2012-2013, PDXfixIT, LLC
 REM
 REM -= Begin Variables =-
@@ -51,8 +51,8 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                       XAMPP Site Creation Script v2.4                       ^|
-ECHO ^|                        Last Updated: August 26, 2012                        ^|
+ECHO ^|                      XAMPP Site Creation Script v2.4.1                      ^|
+ECHO ^|                       Last Updated: September 4, 2013                       ^|
 ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
 ECHO ^|                                                                             ^|
@@ -275,20 +275,20 @@ ECHO.
 ECHO Deleting hosts entry for %SITE%...
 chdir /d %WINDIR%\system32\drivers\etc
 copy hosts hosts.bak > NUL
-powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 www.%SITE%.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1\swww\.%SITE%\.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
-powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 %SITE%.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1\s%SITE%\.local$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
-powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1 %SITE%$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
+powershell -Command "$s = Select-String -pattern '^127\.0\.0\.1\s%SITE%$' -path 'hosts'; $n = $s.LineNumber; if ($n -lt 0) { exit; } Get-Content hosts | Foreach {$i=1}{if ($i++ -ne $n) {$_}} | Set-Content -Encoding UTF8 hosts.new"
 del hosts
 ren hosts.new hosts
 ECHO.
 ECHO Deleting entry in vhosts configuration...
 chdir /d %XAMPP%\apache\conf\extra
 copy httpd-vhosts.conf httpd-vhosts.bak > NUL
-powershell -Command "$s = Select-String -pattern '%SITE%.local' -path 'httpd-vhosts.conf'; $n = $s.LineNumber - 5; if ($n -lt 0) { exit; } $o = $n + 9; Get-Content httpd-vhosts.conf | Foreach {$i=1}{if ($i++ -lt $n -or $i -gt $o) {$_}} | Set-Content -Encoding UTF8 httpd-vhosts.new"
+powershell -Command "$s = Select-String -pattern '\s%SITE%\.local' -path 'httpd-vhosts.conf'; $n = $s.LineNumber - 5; if ($n -lt 0) { exit; } $o = $n + 9; Get-Content httpd-vhosts.conf | Foreach {$i=1}{if ($i++ -lt $n -or $i -gt $o) {$_}} | Set-Content -Encoding UTF8 httpd-vhosts.new"
 IF EXIST httpd-vhosts.new (
 	del httpd-vhosts.conf
 	ren httpd-vhosts.new httpd-vhosts.conf
