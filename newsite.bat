@@ -51,8 +51,8 @@ IF NOT %ERRORLEVEL% == 0 (
 CLS
 ECHO.
 ECHO /=============================================================================\
-ECHO ^|                      XAMPP Site Creation Script v2.4.1                      ^|
-ECHO ^|                       Last Updated: September 4, 2013                       ^|
+ECHO ^|                       XAMPP Site Creation Script v2.5                       ^|
+ECHO ^|                        Last Updated: January 4, 2014                        ^|
 ECHO ^|                https://github.com/pdxfixit/xampp-site-creator               ^|
 ECHO ^>=============================================================================^<
 ECHO ^|                                                                             ^|
@@ -243,7 +243,7 @@ CLS
 ECHO.
 ECHO Creating the database...
 chdir /d %XAMPP%\mysql\bin
-mysql --host=localhost --user=root --execute="CREATE DATABASE IF NOT EXISTS %SITE%"
+mysql --host=localhost --user=root --execute="CREATE USER '%SITE%'@'localhost' IDENTIFIED BY 'password';CREATE DATABASE IF NOT EXISTS `%SITE%`;GRANT ALL PRIVILEGES ON `%SITE%`.* TO '%SITE%'@'localhost';"
 IF %CHOICE% == GENERIC GOTO HOSTS
 IF %CHOICE% == KICKSTART GOTO HOSTS
 GOTO IMPORTSQL
@@ -296,7 +296,7 @@ IF EXIST httpd-vhosts.new (
 ECHO.
 ECHO Deleting database...
 chdir /d %XAMPP%\mysql\bin
-mysql --host=localhost --user=root --execute="DROP DATABASE IF EXISTS %SITE%"
+mysql --host=localhost --user=root --execute="DROP DATABASE IF EXISTS %SITE%;DROP USER IF EXISTS '%SITE%'@'localhost;"
 ECHO.
 ECHO Deleting files...
 chdir /d %WWW%
